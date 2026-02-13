@@ -1,0 +1,12 @@
+
+/Lib
+/Scripts
+/include
+/__pycache__
+
+/apis/__pycache__
+
+/data/__pycache__
+
+credentials.json
+
