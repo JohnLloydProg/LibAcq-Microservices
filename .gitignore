@@ -9,5 +9,6 @@
 /data/__pycache__
 
 credentials.json
+logfile.txt
 .env
 
