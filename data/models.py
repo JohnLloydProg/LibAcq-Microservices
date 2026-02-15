@@ -140,7 +140,7 @@ class Acquisition(Data):
     processing_request:ProcessingRequest = None
     stage:str = 'Waiting for PO'
 
-    def __init__(self, id:str, book:Book=None,  processing_request:ProcessingRequest=None, courses:list[Course]=[], year_purchased:int=None, supplier:str=None, copyright:int=None, no_title:int=None, no_volumes:int=None, delivery_receipt:str=None, requestor_name:str=None, requestor_department:str=None, bundle_name:str=None, sales_invoice_price:float=None):
+    def __init__(self, id:str, book:Book=None,  processing_request:ProcessingRequest=None, courses:list[Course]=[], year_purchased:int=None, supplier:str=None, copyright:int=None, no_title:int=None, no_volumes:int=None, delivery_receipt:str=None, requestor_name:str=None, requestor_department:str=None, bundle_name:str=None, sales_invoice_price:float=None, program:str=None):
         if (not id):
             id = f"ACQ-{datetime.now().date().isoformat().replace('-', '')}-{secrets.token_hex(nbytes=6//2)}".upper()
         super().__init__(id)
@@ -157,6 +157,7 @@ class Acquisition(Data):
         self.bundle_name = bundle_name
         self.sales_invoice_price = sales_invoice_price
         self.courses = courses
+        self.program = program
     
     @staticmethod
     def from_data(primary_key:str, data:dict) -> 'Acquisition':
@@ -168,6 +169,7 @@ class Acquisition(Data):
             'copyright':self.copyright, 'no_title':self.no_title, 'no_volumes':self.no_volumes, 'delivery_receipt':self.delivery_receipt,
             'requestor_name':self.requestor_name, 'requestor_department':self.requestor_department, 'stage':self.stage, 'bundle_name':self.bundle_name,
             'processing_request_no':self.processing_request.primary_key, 'course_codes':[course.primary_key for course in self.courses],
+            'program':self.program
         }
         if (self.purchase_order):
             data['purchase_order_no'] = self.purchase_order.primary_key
