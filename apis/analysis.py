@@ -2,7 +2,7 @@ from fastapi_utils.cbv import cbv
 from fastapi_utils.inferring_router import InferringRouter
 from firebase import veriy_firebase_token, Firebase
 from fastapi import Header, Depends, Request,  status, Response
-from data.models import Book, InShelfAcquisition
+from data.models import Book, InShelfAcquisition, Acquisition
 from singleton import get_firebase
 from datetime import datetime
 import logging
@@ -62,7 +62,7 @@ class AnalysisView:
         return result
 
 
-    @router.get('/')
+    @router.get('/suppliers')
     async def get_suppliers(self, response:Response, authorization: str = Header(...)):
         id_token = authorization.split('Bearer').pop().strip()
         uid = veriy_firebase_token(id_token)
@@ -70,4 +70,13 @@ class AnalysisView:
             response.status_code = status.HTTP_401_UNAUTHORIZED
             return 'Unauthorized'
         
+        suppliers = {}
+        
+        doc_refs = self.firebase.get_all_data_refs(Acquisition)
+        for doc_ref in doc_refs:
+            acquisition = self.firebase.get_acquisition(doc_ref)
+            suppliers[acquisition.supplier] = suppliers.get(acquisition.supplier, 0) + 1
+        
+        return sorted(list(suppliers.items()), key=lambda item: item[1], reverse=True)
+
         
