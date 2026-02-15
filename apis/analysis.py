@@ -78,5 +78,28 @@ class AnalysisView:
             suppliers[acquisition.supplier] = suppliers.get(acquisition.supplier, 0) + 1
         
         return sorted(list(suppliers.items()), key=lambda item: item[1], reverse=True)
+    
+    @router.get('/total-per-course')
+    async def get_total_course(self, response:Response, authorization: str = Header(...)):
+        id_token = authorization.split('Bearer').pop().strip()
+        uid = veriy_firebase_token(id_token)
+        if (uid is None):
+            response.status_code = status.HTTP_401_UNAUTHORIZED
+            return 'Unauthorized'
+
+        acquisition_refs = self.firebase.get_all_data_refs(InShelfAcquisition)
+
+        result = {}
+        cur_date = datetime.now().date()
+        for ref in acquisition_refs:
+            in_shelf = self.firebase.get_in_shelf(ref)
+            result[ref] = {}
+            for key, record in in_shelf.records.items():
+                result[ref][key] = 0
+                for item in record:
+                    if (item['copyright'] < cur_date.year - 5):
+                        result[ref][key] += 1
+
+        return result
 
         
