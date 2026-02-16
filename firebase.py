@@ -36,8 +36,11 @@ cache = TTLCache(maxsize=None, ttl=3600)
 
 class Firebase:
     def __init__(self, cred_path:str='./credentials.json'):
-        self.cred = credentials.Certificate(cred_path)
-        firebase_admin.initialize_app(self.cred)
+        try:
+            self.cred = credentials.Certificate(cred_path)
+            firebase_admin.initialize_app(self.cred)
+        except FileNotFoundError:
+            firebase_admin.initialize_app()
         self.firestore = firestore.client()
     
     def get_all_data_refs(self, cls) -> list[str]:
