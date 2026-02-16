@@ -2,11 +2,13 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import auth
+from firebase_admin import auth
 from data.models import Book, Course, PurchaseOrder, SalesInvoice, ProcessingRequest, Acquisition, InShelfAcquisition
 from data import errors
 from functools import wraps
 from dotenv import load_dotenv
 from datetime import datetime
+from cachetools import TTLCache, cached
 import logging
 import sys
 import os
@@ -29,6 +31,8 @@ def veriy_firebase_token(id_token:str):
     
     return uid
 
+cache = TTLCache(maxsize=None, ttl=3600)
+
 
 class Firebase:
     def __init__(self, cred_path:str='./credentials.json'):
@@ -49,6 +53,7 @@ class Firebase:
         logger.info(f'Book saved with document id: {doc_ref.id}')
         return book
 
+    @cached(cache=cache)
     def get_book(self, isbn:str) -> Book:
         doc_ref = self.firestore.collection(Book.collection_name).document(isbn)
         data = doc_ref.get()
