@@ -31,7 +31,8 @@ def veriy_firebase_token(id_token:str):
     
     return uid
 
-cache = TTLCache(maxsize=None, ttl=3600)
+short_lived_cache = TTLCache(maxsize=500, ttl=120)
+long_lived_cache = TTLCache(maxsize=200, ttl=3600)
 
 
 class Firebase:
@@ -56,7 +57,7 @@ class Firebase:
         logger.info(f'Book saved with document id: {doc_ref.id}')
         return book
 
-    @cached(cache=cache)
+    @cached(cache=long_lived_cache)
     def get_book(self, isbn:str) -> Book:
         doc_ref = self.firestore.collection(Book.collection_name).document(isbn)
         data = doc_ref.get()
@@ -73,6 +74,7 @@ class Firebase:
         logger.info(f'Course saved with document id: {doc_ref.id}')
         return course
     
+    @cached(cache=long_lived_cache)
     def get_course(self, course_code:str) -> Course:
         doc_ref = self.firestore.collection(Course.collection_name).document(course_code)
         data = doc_ref.get()
@@ -89,6 +91,7 @@ class Firebase:
         logger.info(f'Purchase Order saved with document id: {doc_ref.id}')
         return purchase_order
 
+    @cached(cache=long_lived_cache)
     def get_purchase_order(self, order_no:str) -> PurchaseOrder:
         doc_ref = self.firestore.collection(PurchaseOrder.collection_name).document(order_no)
         data = doc_ref.get()
@@ -107,7 +110,7 @@ class Firebase:
         logger.info(f'Purchase Order saved with document id: {doc_ref.id}')
         return sales_invoice
     
-
+    @cached(cache=long_lived_cache)
     def get_sales_invoice(self, invoice_no:str) -> SalesInvoice:
         doc_ref = self.firestore.collection(SalesInvoice.collection_name).document(invoice_no)
         data = doc_ref.get()
@@ -126,6 +129,7 @@ class Firebase:
         logger.info(f'Processing Request saved with document id: {doc_ref.id}')
         return processing_request
 
+    @cached(cache=long_lived_cache)
     def get_processing_request(self, request_no:str) -> ProcessingRequest:
         doc_ref = self.firestore.collection(ProcessingRequest.collection_name).document(request_no)
         data = doc_ref.get()
@@ -145,6 +149,7 @@ class Firebase:
         logger.info(f'Acquisition saved with document id: {doc_ref.id}')
         return acquisition
     
+    @cached(cache=short_lived_cache)
     def get_acquisition(self, id:str) -> Acquisition:
         doc_ref = self.firestore.collection(Acquisition.collection_name).document(id)
         data = doc_ref.get()
@@ -161,6 +166,7 @@ class Firebase:
         else:
             raise errors.AcquisitionNotFoundError(f'Acquisition with id {id} not found.')
     
+    @cached(cache=short_lived_cache)
     def get_acquisition_by_ISBN_PR_NO(self, isbn:str, pr_no:str) -> Acquisition:
         for doc_ref in self.get_all_data_refs(Acquisition):
             doc = self.firestore.collection(Acquisition.collection_name).document(doc_ref)
@@ -180,6 +186,7 @@ class Firebase:
         logger.info(f'In Shelf saved with document id: {doc_ref.id}')
         return in_shelf
 
+    @cached(cache=short_lived_cache)
     def get_in_shelf(self, id:str) -> InShelfAcquisition:
         doc_ref = self.firestore.collection(InShelfAcquisition.collection_name).document(id)
         data = doc_ref.get()
