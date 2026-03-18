@@ -93,11 +93,17 @@ class Firebase:
 
     @cached(cache=long_lived_cache)
     def get_purchase_order(self, order_no:str) -> PurchaseOrder:
+        if (not order_no):
+            return None
         doc_ref = self.firestore.collection(PurchaseOrder.collection_name).document(order_no)
         data = doc_ref.get()
         if (data.exists):
             purchase_order_data = data.to_dict()
-            purchase_order_data['order_date'] = datetime.fromisoformat(purchase_order_data['order_date'])
+            order_date = purchase_order_data['order_date']
+            try:
+                purchase_order_data['order_date'] = datetime.fromisoformat(order_date)
+            except TypeError:
+                purchase_order_data['order_date'] = datetime.combine(order_date.date(), order_date.time(), order_date.tzinfo)
             logger.info(f'Purchase Order with document id {order_no} returned.')
             return PurchaseOrder.from_data(order_no, purchase_order_data)
         else:
@@ -112,11 +118,17 @@ class Firebase:
     
     @cached(cache=long_lived_cache)
     def get_sales_invoice(self, invoice_no:str) -> SalesInvoice:
+        if (not invoice_no):
+            return None
         doc_ref = self.firestore.collection(SalesInvoice.collection_name).document(invoice_no)
         data = doc_ref.get()
         if (data.exists):
             sales_invoice_data = data.to_dict()
-            sales_invoice_data['received_on'] = datetime.fromisoformat(sales_invoice_data['received_on'])
+            received_on = sales_invoice_data['received_on']
+            try:
+                sales_invoice_data['received_on'] = datetime.fromisoformat(received_on)
+            except TypeError:
+                sales_invoice_data['received_on'] = datetime.combine(received_on.date(), received_on.time(), received_on.tzinfo)
             logger.info(f'Sales Invoice with document id {invoice_no} returned.')
             return SalesInvoice.from_data(invoice_no, sales_invoice_data)
         else:
@@ -131,11 +143,18 @@ class Firebase:
 
     @cached(cache=long_lived_cache)
     def get_processing_request(self, request_no:str) -> ProcessingRequest:
+        if (not request_no):
+            return None
+
         doc_ref = self.firestore.collection(ProcessingRequest.collection_name).document(request_no)
         data = doc_ref.get()
         if (data.exists):
             processing_request_data = data.to_dict()
-            processing_request_data['request_date'] = datetime.fromisoformat(processing_request_data['request_date'])
+            request_date = processing_request_data['request_date']
+            try:
+                processing_request_data['request_date'] = datetime.fromisoformat(request_date)
+            except TypeError:
+                processing_request_data['request_date'] = datetime.combine(request_date.date(), request_date.time(), request_date.tzinfo)
             logger.info(f'Processing Request with document id {request_no} returned.')
             return ProcessingRequest.from_data(request_no, processing_request_data)
         else:
@@ -205,7 +224,22 @@ class Firebase:
 if __name__ == '__main__':
     load_dotenv()
     firebase = Firebase('./credentials.json')
-    book = Book('456', 'test1', 'john lloyd1', 'testing1', '456', '041231')
+
+    
+    acquisition_refs = firebase.get_all_data_refs(Acquisition)
+    _errors = {}
+    for ref in acquisition_refs:
+        try:
+            acquisition = firebase.get_acquisition(ref)
+            print(f'{acquisition.primary_key}: {acquisition.courses}')
+        except Exception as e:
+            _errors[e.args] = _errors.get(e.args, 0) + 1
+    
+    for error, count in _errors.items():
+        print(error)
+        print(f'Count: {count}')
+
+    """book = Book('456', 'test1', 'john lloyd1', 'testing1', '456', '041231')
     firebase.save_book(book, "eyJhbGciOiJSUzI1NiIsImtpZCI6ImY3NThlNTYzYzBiNjRhNzVmN2UzZGFlNDk0ZDM5NTk1YzE0MGVmOTMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vbGliLWFjcSIsImF1ZCI6ImxpYi1hY3EiLCJhdXRoX3RpbWUiOjE3NzAwNTgyMjgsInVzZXJfaWQiOiIzdTZtS1h2NWx0YU94aWxIbFNSZnlsZmFsVDQyIiwic3ViIjoiM3U2bUtYdjVsdGFPeGlsSGxTUmZ5bGZhbFQ0MiIsImlhdCI6MTc3MDA1ODIyOCwiZXhwIjoxNzcwMDYxODI4LCJlbWFpbCI6ImpvaG5sbG95ZHVuaWRhMEBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiam9obmxsb3lkdW5pZGEwQGdtYWlsLmNvbSJdfSwic2lnbl9pbl9wcm92aWRlciI6InBhc3N3b3JkIn19.tPPGVOMXdmoW3-3Sgh7sOB_2E6X8ZDnwaPDHv6fPsQutWD9woO3A50yzOH8aSumh-F4oy1lS7iCRL3qykw6Pbl4Z82Ssq0fhYgWao-QM7ukQPmTnKZVgEKBU_-TYGtv21vgXHEISwWxw3zSeD8VGxV7x9Mg0jyY2NQJ8BrqYvIqcZHenwZFdrea42FZgLgc3PapdJDg1lFDkqoXOFqXRUWERoQhLD55RzlBk11qTSqSZjiY-csWys_0VvQzJXEX0YOtAUIN5aU00eA0bAgFNDx2mYu63OIBu2qZ7cXxsql4lmDl9sK4wA2XjIdxFKsQxoUb0BfZruqeuEkv5Z_VpcA")
     print(firebase.get_book('456').primary_key)
     print(firebase.get_all_data_refs(Book))
@@ -236,4 +270,4 @@ if __name__ == '__main__':
     acquisition.sales_invoice = sales_invoice
     acquisition.sales_invoice_price = 1230.0
     firebase.save_acquisition(acquisition)
-
+"""

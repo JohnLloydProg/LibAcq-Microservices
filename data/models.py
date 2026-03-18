@@ -206,7 +206,7 @@ class Acquisition(Data):
     def purchase_order(self, value:PurchaseOrder):
         self._purchase_order = value
         if (not self.processing_request):
-            raise RuntimeError(f"No Processing Request!")
+            return
         self.stage = 'Waiting for SI'
     
     @property
@@ -217,7 +217,7 @@ class Acquisition(Data):
     def sales_invoice(self, value:SalesInvoice):
         self._sales_invoice = value
         if (not self.purchase_order):
-            raise RuntimeError(f"No Purchase Order!")
+            return
         self.stage = 'Waiting for Delivery'
     
     @property
