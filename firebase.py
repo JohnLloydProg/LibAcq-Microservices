@@ -159,8 +159,14 @@ class Firebase:
             acquisition_data['processing_request'] = self.get_processing_request(acquisition_data['processing_request_no'])
             courses:list[Course] = [self.get_course(course_code) for course_code in acquisition_data['course_codes']]
             acquisition_data['courses'] = courses
-            acquisition_data['purchase_order'] = self.get_purchase_order(acquisition_data.get('purchase_order_no'))
-            acquisition_data['sales_invoice'] = self.get_sales_invoice(acquisition_data.get('sales_invoice_no'))
+            try:
+                acquisition_data['purchase_order'] = self.get_purchase_order(acquisition_data.get('purchase_order_no'))
+            except errors.PurchaseOrderNotFoundError:
+                acquisition_data['purchase_order'] = None
+            try:
+                acquisition_data['sales_invoice'] = self.get_sales_invoice(acquisition_data.get('sales_invoice_no'))
+            except errors.SalesInvoiceNotFoundError:
+                acquisition_data['sales_invoice'] = None
             logger.info(f'Processing Request with document id {id} returned.')
             return Acquisition.from_data(id, acquisition_data)
         else:
