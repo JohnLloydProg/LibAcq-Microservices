@@ -162,11 +162,11 @@ class Firebase:
             try:
                 acquisition_data['purchase_order'] = self.get_purchase_order(acquisition_data.get('purchase_order_no'))
             except errors.PurchaseOrderNotFoundError:
-                acquisition_data['purchase_order'] = None
+                pass
             try:
                 acquisition_data['sales_invoice'] = self.get_sales_invoice(acquisition_data.get('sales_invoice_no'))
             except errors.SalesInvoiceNotFoundError:
-                acquisition_data['sales_invoice'] = None
+                pass
             logger.info(f'Processing Request with document id {id} returned.')
             return Acquisition.from_data(id, acquisition_data)
         else:
